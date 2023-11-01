@@ -13,6 +13,7 @@ def get_champions(lane, region = "global", tier = "emerald_plus"):
     rows = soup.find_all('tr')
     for row in rows:
         cells = row.find_all('td')
-        result.append(cells[1].get_text())
+        champ = (cells[1].get_text(), cells[3].get_text(), cells[4].get_text(), cells[5].get_text())
+        result.append(champ)
 
     return result

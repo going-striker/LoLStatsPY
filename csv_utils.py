@@ -156,21 +156,39 @@ def generate_1000_matchups_score(lane = "top"):
         write = csv.writer(f) 
         write.writerows(rows) 
 
-LANE = "jungle"
-RANK = "iron"
-refresh_data(lane=LANE, tier=RANK)
-#write_csv_all_lane_matchups(LANE, RANK)
+
 
 def read_csv_all_matchups(lane, tier = "emerald_plus"):
     file = open("matchups_{}_{}_all.csv".format(lane, tier), "r")
     champions = list(csv.reader(file, delimiter=","))
     file.close()
     return champions
-    # result = list()
-    # for champ in champions:
-    #     result.append((champ[0], champ[1], champ[2], champ[3]))
-    # return result
 
-# matchups = read_csv_all_matchups("top", "iron")
-# print(matchups)
+
+def write_my_matchups(champions, lane, tier):
+    champions = read_csv_champions(lane=lane, tier=tier)
+    champions_formatter = [ x[0].replace(".", "").replace(" ", "").replace("'", "").lower() for x in champions ]
+    champions_formatter.sort()
+    rows = list()
+
+    for x in champions_formatter:
+        counters = read_csv_champion_counters(champion=x, lane=lane, tier=tier)
+        counters_formatted = { k.replace(".", "").replace(" ", "").replace("'", "").lower() : v for k, v in counters.items() }
+        my_counters = [ (k, v[0], v[1]) for k,v in counters_formatted.items() if k in my_champions ]
+        my_counters_sorted = sorted(my_counters, key=lambda d: d[1])
+        row = [ x ]
+        for y in my_counters_sorted:
+            row.extend( [ y[0], y[1].replace("%", "")] )
+        rows.append(row)
+
+    with open("my_matchups_{}_{}.csv".format(lane, tier), "w", newline='') as f: 
+        write = csv.writer(f) 
+        write.writerows(rows) 
+
+LANE = "top"
+RANK = "iron"
+my_champions = [ "drmundo", "nasus", "tryndamere", "kayle", "warwick" ]
+refresh_data(lane=LANE, tier=RANK)
+write_csv_all_lane_matchups(LANE, RANK)
+write_my_matchups(champions=my_champions, lane=LANE, tier=RANK)
 print("done")

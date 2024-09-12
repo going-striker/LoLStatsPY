@@ -4,12 +4,13 @@ import random
 import time
 from get_champions import get_champions
 from get_champions_counters import get_champion_counters
+from openpyxl import Workbook
 
 '''
 GET LIST OF CHAMPIONS WITH RATES AND WRITE IN CSV
 '''
-def write_csv_champions(lane, tier = "emerald_plus"):
-    champions = get_champions(lane, tier=tier)
+def write_csv_champions(lane, tier = "emerald_plus", patch = None):
+    champions = get_champions(lane, tier=tier, patch=patch)
     rows = list()
     for champ in champions:
         name = list()
@@ -40,8 +41,8 @@ def read_csv_champions(lane, tier = "emerald_plus"):
 '''
 READ A CHAMPION MATCHUP / COUNTERS AND WRITE IN CSV
 '''
-def write_csv_champion_counters(champion, lane, tier = "emerald_plus"):
-    counters = get_champion_counters(champion, lane, tier=tier)
+def write_csv_champion_counters(champion, lane, tier = "emerald_plus", patch = None):
+    counters = get_champion_counters(champion, lane, tier=tier, patch=patch)
     rows = list()
     file_path = "matchups/{}/{}/counters_{}.csv".format(lane, tier, champion)
     folder_path = "matchups/{}/{}/".format(lane, tier)
@@ -106,12 +107,12 @@ def write_csv_all_lane_matchups(lane, tier = "emerald_plus"):
 '''
 REFRESH ALL DATA : GET CHAMPIONS / COUNTERS / GLOBAL MATCHUPS AND REWRITE ALL CSVs
 '''
-def refresh_data(lane, tier = "emerald_plus"):
-    write_csv_champions(lane, tier=tier)
+def refresh_data(lane, tier = "emerald_plus", patch = None):
+    write_csv_champions(lane, tier=tier, patch=patch)
     champions = read_csv_champions(lane, tier=tier)
     champions_formatted = [x[0].replace(".", "").replace(" ", "").replace("'", "").lower() for x in champions]
     for x in champions_formatted:
-        write_csv_champion_counters(x, lane, tier=tier)
+        write_csv_champion_counters(x, lane, tier=tier, patch=patch)
         time.sleep(2)
     write_csv_all_lane_matchups(lane, tier=tier)
 
@@ -185,10 +186,44 @@ def write_my_matchups(champions, lane, tier):
         write = csv.writer(f) 
         write.writerows(rows) 
 
+
+def read_my_matchups(lane, tier = "emerald_plus"):
+    file = open("my_matchups_{}_{}.csv".format(lane, tier), "r")
+    matchups = list(csv.reader(file, delimiter=","))
+    file.close()
+    return matchups
+
+
+def refresh_ranks(lane, ranks, patch = None, champions = None):
+    for rank in ranks:
+        refresh_data(lane=lane, tier=rank, patch=patch)
+        write_csv_all_lane_matchups(LANE, RANK)
+        write_my_matchups(champions=champions, lane=LANE, tier=RANK)
+        print(f"done : lane={lane} rank={rank}, patch={patch}")
+
+def generate_my_full_matchups_files(lane, ranks):
+    book = Workbook()
+    sheet = book.active
+    sheet.title = "My Full Matchup"
+    for rank in ranks:
+        matchups = read_my_matchups(lane=lane, tier=rank)
+        rank_sheet = book.create_sheet(rank)
+        for matchup in matchups:
+            rank_sheet.append(matchup)
+    book.save(filename = "myfullmatchup.xlsx")
+
+
 LANE = "top"
 RANK = "iron"
-my_champions = [ "drmundo", "nasus", "tryndamere", "kayle", "warwick" ]
-refresh_data(lane=LANE, tier=RANK)
-write_csv_all_lane_matchups(LANE, RANK)
-write_my_matchups(champions=my_champions, lane=LANE, tier=RANK)
-print("done")
+PATCH = "14.17"
+my_champions = [ "drmundo", "nasus", "tryndamere", "kayle", "garen", "sett", "mordekaiser", "darius", "yorick" ]
+ranks = [ "iron", "bronze", "silver", "gold", "emerald_plus", "diamond_plus", "master_plus" ] 
+
+#refresh_ranks(lane=LANE, ranks=ranks, patch=PATCH, champions=my_champions)
+# for rank in ranks:
+#     write_my_matchups(champions=my_champions, lane=LANE, tier=rank)   
+generate_my_full_matchups_files(lane=LANE, ranks=ranks)
+
+#refresh_data(lane=LANE, tier=RANK, patch=PATCH)
+#write_my_matchups(champions=my_champions, lane=LANE, tier=RANK)
+

@@ -4,7 +4,8 @@ import random
 import time
 from get_champions import get_champions
 from get_champions_counters import get_champion_counters
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import PatternFill
 
 '''
 GET LIST OF CHAMPIONS WITH RATES AND WRITE IN CSV
@@ -212,18 +213,46 @@ def generate_my_full_matchups_files(lane, ranks):
             rank_sheet.append(matchup)
     book.save(filename = "myfullmatchup.xlsx")
 
+def colorize_my_matchups(filename, champ_colors):
+    wb = load_workbook(filename)
+    for sheet in wb:
+        print(sheet.title)
+        for row in sheet.iter_rows(min_row=1, max_col=2, max_row=sheet.max_row):
+            pick_cell = row[1]
+            if pick_cell.value is not None:
+                champ = [ x for x in champ_colors if x[0] == pick_cell.value ]
+                pick_cell.fill = champ[0][1]
+    wb.save(filename)          
 
 LANE = "top"
 RANK = "iron"
-PATCH = "14.17"
+PATCH = None
 my_champions = [ "drmundo", "nasus", "tryndamere", "kayle", "garen", "sett", "mordekaiser", "darius", "yorick" ]
+
+champ_colors = [ 
+    ("drmundo", PatternFill(start_color="ABEBC6", end_color="ABEBC6", fill_type = "solid")),
+    ("nasus", PatternFill(start_color="a569bd", end_color="a569bd", fill_type = "solid")),
+    ("tryndamere", PatternFill(start_color="fadbd8", end_color="fadbd8", fill_type = "solid")),
+    ("kayle", PatternFill(start_color="fcf3cf", end_color="fcf3cf", fill_type = "solid")),
+    ("garen", PatternFill(start_color="f9e79f", end_color="f9e79f", fill_type = "solid")),
+    ("sett", PatternFill(start_color="f5cba7", end_color="f5cba7", fill_type = "solid")),
+    ("mordekaiser", PatternFill(start_color="d5dbdb", end_color="d5dbdb", fill_type = "solid")),
+    ("darius", PatternFill(start_color="f5b7b1", end_color="f5b7b1", fill_type = "solid")),
+    ("yorick", PatternFill(start_color="aed6f1", end_color="aed6f1", fill_type = "solid"))
+]
+
 ranks = [ "iron", "bronze", "silver", "gold", "emerald_plus", "diamond_plus", "master_plus" ] 
 
-#refresh_ranks(lane=LANE, ranks=ranks, patch=PATCH, champions=my_champions)
+MATCHUP_EXCEL = "myfullmatchup.xlsx"
+
+# refresh_ranks(lane=LANE, ranks=ranks, patch=PATCH, champions=my_champions)
 # for rank in ranks:
 #     write_my_matchups(champions=my_champions, lane=LANE, tier=rank)   
-generate_my_full_matchups_files(lane=LANE, ranks=ranks)
+# generate_my_full_matchups_files(lane=LANE, ranks=ranks)
 
 #refresh_data(lane=LANE, tier=RANK, patch=PATCH)
 #write_my_matchups(champions=my_champions, lane=LANE, tier=RANK)
+
+          
+    
 
